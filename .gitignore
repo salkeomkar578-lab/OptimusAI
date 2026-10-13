@@ -11,10 +11,10 @@ backend/optimus.db
 uploads/
 
 # Node / Next.js
-frontend/node_modules/
-frontend/.next/
-frontend/out/
-frontend/build/
+node_modules/
+.next/
+out/
+build/
 
 # Environment & Secrets
 .env
