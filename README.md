@@ -118,6 +118,19 @@ docker compose up --build
 
 ---
 
+## ⚡ Deploying on Vercel
+
+Because this is a full-stack monorepo with both a Python backend and a Next.js frontend, Vercel needs to know the **Root Directory** is `frontend`:
+
+1. In the Vercel Dashboard, import **`salkeomkar578-lab/OptimusAI`** (or go to **Project Settings > General**).
+2. Under **Root Directory**, click **Edit** and select **`frontend`** (or type `frontend`).
+3. Click **Save** and **Deploy** (or **Redeploy** if a previous build failed).
+4. The deployment will detect `next 16.4.0` in `frontend/package.json` and build successfully!
+
+*(Optional: Add `NEXT_PUBLIC_API_URL` in Vercel Environment Variables pointing to your hosted FastAPI backend on Render, Railway, or Fly.io).*
+
+---
+
 ## 📊 Dashboard Views
 1. **Overview Command Center (`/`):** Next study session countdown, engine status, and architecture pillars.
 2. **Onboarding Wizard (`/onboarding`):** 4-step wizard to upload syllabi, past exam papers, define weekly study availability hours, and set exam dates.
