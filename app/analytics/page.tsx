@@ -28,7 +28,8 @@ export default function AnalyticsDashboardPage() {
   const loadAnalytics = async () => {
     try {
       setLoading(true);
-      const res = await api.getUserAnalytics("demo-user-1");
+      const activeUid = api.getActiveUserId();
+      const res = await api.getUserAnalytics(activeUid);
       setData(res);
     } catch (err) {
       console.error("Failed to load analytics:", err);

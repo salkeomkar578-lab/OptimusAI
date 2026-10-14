@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.database import engine, Base, SessionLocal
-from app.routes import users, syllabus, pyq, planner, study, analytics
+from app.routes import users, syllabus, pyq, planner, study, analytics, ai_settings
 from app.models.schemas import User, AvailabilitySlot, generate_uuid
 from app.engines.semantic_ai import SemanticAIEngine
 from app.engines.scheduler import DeterministicSchedulerEngine
@@ -39,6 +39,7 @@ app.include_router(pyq.router, prefix=settings.API_V1_STR)
 app.include_router(planner.router, prefix=settings.API_V1_STR)
 app.include_router(study.router, prefix=settings.API_V1_STR)
 app.include_router(analytics.router, prefix=settings.API_V1_STR)
+app.include_router(ai_settings.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def root():

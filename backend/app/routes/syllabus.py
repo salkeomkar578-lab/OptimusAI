@@ -1,16 +1,36 @@
 import os
+from datetime import datetime, timedelta
 from typing import List, Optional
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.schemas import (
-    Syllabus, Subject, Unit, Topic, TopicResponse, UnitResponse, SubjectResponse, SyllabusResponse
+    Syllabus, Subject, Unit, Topic, User, TopicResponse, UnitResponse, SubjectResponse, SyllabusResponse
 )
 from app.engines.semantic_ai import SemanticAIEngine
+from app.engines.priority_engine import PriorityEngine
+from app.services.ai_gateway import ai_gateway
 from app.services.ocr_parser import DocumentParserService
 from app.config import settings
 
 router = APIRouter(prefix="/syllabus", tags=["Syllabus"])
+
+class SyllabusPreviewRequest(BaseModel):
+    raw_text: str
+    title: Optional[str] = "Course Syllabus"
+
+@router.post("/preview")
+def preview_syllabus_parse(payload: SyllabusPreviewRequest):
+    """
+    Simulates parsing without persisting to database.
+    Allows user to test and view structured JSON in real time.
+    """
+    parsed = ai_gateway.parse_syllabus(payload.raw_text, default_title=payload.title or "Course Syllabus")
+    return {
+        "status": "success",
+        "parsed": parsed
+    }
 
 @router.post("/upload")
 async def upload_syllabus(
@@ -18,8 +38,15 @@ async def upload_syllabus(
     title: str = Form("Course Syllabus"),
     raw_text: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None),
+    api_key: Optional[str] = Form(None),
+    ai_provider: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
+    # If user provided runtime API key, configure it immediately
+    if api_key and ai_provider:
+        settings.set_ai_key(ai_provider, api_key)
+        ai_gateway.refresh_keys()
+
     extracted_text = ""
     file_url = None
 
@@ -42,21 +69,33 @@ async def upload_syllabus(
     if not extracted_text.strip():
         # Provide sample default syllabus text if empty
         extracted_text = (
-            "Subject: Distributed Systems & Cloud Computing\n"
-            "Unit 1: Distributed Architectures and Virtualization\n"
-            "- Cloud Service Models (IaaS, PaaS, SaaS)\n"
-            "- Hypervisors and Containerization (Docker, cgroups)\n"
-            "- Microservices Architecture & Service Mesh\n"
-            "Unit 2: Consensus, Synchronization and Consistency\n"
-            "- Logical Clocks (Lamport Timestamps and Vector Clocks)\n"
-            "- Distributed Mutual Exclusion Algorithms\n"
-            "- Paxos and Raft Consensus Protocols\n"
-            "- CAP Theorem and Eventual Consistency Models\n"
-            "Unit 3: Fault Tolerance, Storage and Reliability\n"
-            "- Distributed Key-Value Stores (Dynamo, Cassandra)\n"
-            "- Byzantine Fault Tolerance & Quorum Systems\n"
-            "- Replication, Sharding, and Failure Detectors\n"
+            f"Subject: {title}\n"
+            "Unit 1: Foundations and Fundamental Principles\n"
+            "- Introduction to Core Taxonomy and Theoretical Bounds\n"
+            "- State Architectures and Invariant Conservation\n"
+            "- Operational Workflows and Analysis\n"
+            "Unit 2: Applied Techniques and Methodology\n"
+            "- Practical Implementation and Execution Models\n"
+            "- Quantitative Optimization and Stress Testing\n"
+            "- Comparative Performance Analysis\n"
+            "Unit 3: Advanced Topics and Synthesis\n"
+            "- Complex Problem Solving and Scalability Constraints\n"
+            "- System Verification and Resiliency Formulations\n"
+            "- Future Trends and Synthesis\n"
         )
+
+    # Ensure user exists in database to satisfy foreign keys
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        user = User(
+            id=user_id,
+            email=f"{user_id}@optimus.ai",
+            name="Student",
+            target_exam_date=datetime.utcnow() + timedelta(days=21),
+            created_at=datetime.utcnow()
+        )
+        db.add(user)
+        db.commit()
 
     syllabus = SemanticAIEngine.process_and_store_syllabus(
         db=db,
@@ -66,11 +105,20 @@ async def upload_syllabus(
         file_url=file_url
     )
 
+    # Calibrate priorities for new syllabus topics
+    try:
+        PriorityEngine.recalculate_user_priorities(db, user_id)
+    except Exception:
+        pass
+
+    full_tree = get_syllabus_tree(syllabus.id, db)
+
     return {
         "message": "Syllabus processed and structured successfully",
         "syllabus_id": syllabus.id,
         "title": syllabus.title,
-        "subject_count": len(syllabus.subjects)
+        "subject_count": len(syllabus.subjects),
+        "tree": full_tree
     }
 
 @router.get("/{syllabus_id}", response_model=SyllabusResponse)
@@ -97,7 +145,7 @@ def get_syllabus_tree(syllabus_id: str, db: Session = Depends(get_db)):
                     calculated_priority=t.calculated_priority,
                     last_studied_at=t.last_studied_at,
                     next_revision_due=t.next_revision_due,
-                    pyq_count=len(t.pyq_mappings)
+                    pyq_count=len(t.pyq_mappings) if t.pyq_mappings else 0
                 ))
             units_res.append(UnitResponse(
                 id=u.id,
@@ -125,8 +173,18 @@ def get_syllabus_tree(syllabus_id: str, db: Session = Depends(get_db)):
 
 @router.get("/user/{user_id}", response_model=List[SyllabusResponse])
 def get_user_syllabi(user_id: str, db: Session = Depends(get_db)):
-    syllabi = db.query(Syllabus).filter(Syllabus.user_id == user_id).all()
-    # Return basic list
+    # Order by newest first
+    syllabi = (
+        db.query(Syllabus)
+        .filter(Syllabus.user_id == user_id)
+        .order_by(Syllabus.created_at.desc())
+        .all()
+    )
+    
+    # Fallback to any recent syllabus if user_id has none
+    if not syllabi:
+        syllabi = db.query(Syllabus).order_by(Syllabus.created_at.desc()).all()
+
     results = []
     for syl in syllabi:
         results.append(get_syllabus_tree(syl.id, db))

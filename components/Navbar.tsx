@@ -91,6 +91,14 @@ export function Navbar() {
 
           {/* User Pill & Judge Audit Button */}
           <div className="flex items-center gap-2.5">
+            <Link
+              href="/syllabus"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500/15 via-purple-500/15 to-sky-500/15 border border-indigo-500/30 text-indigo-300 hover:text-white hover:border-indigo-400 text-xs font-semibold transition-all hover:scale-105 shadow-sm shadow-indigo-500/20"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+              <span>AI Syllabus</span>
+            </Link>
+
             <button
               onClick={() => setShowAuditModal(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 text-xs font-medium transition-all hover:scale-105"

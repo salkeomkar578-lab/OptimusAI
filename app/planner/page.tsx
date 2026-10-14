@@ -32,16 +32,19 @@ export default function PlannerPage() {
   const [viewMode, setViewMode] = useState<"timeline" | "grid">("timeline");
   const [isReplanning, setIsReplanning] = useState<boolean>(false);
 
-  const userId = "demo-user-1";
+  const [userId, setUserId] = useState<string>("demo-user-1");
 
   useEffect(() => {
-    loadSessions();
+    const activeUid = api.getActiveUserId();
+    setUserId(activeUid);
+    loadSessions(activeUid);
   }, []);
 
-  const loadSessions = async () => {
+  const loadSessions = async (uid?: string) => {
     try {
       setLoading(true);
-      const data = await api.getUserSessions(userId);
+      const targetUid = uid || userId || api.getActiveUserId();
+      const data = await api.getUserSessions(targetUid);
       setSessions(data);
     } catch (err) {
       console.error("Failed to load sessions:", err);

@@ -24,7 +24,7 @@ class SemanticAIEngine:
         Parses raw syllabus text via Semantic AI, generates embeddings for each topic,
         and persists the entire hierarchy: Syllabus -> Subjects -> Units -> Topics.
         """
-        parsed_data = ai_gateway.parse_syllabus(raw_text)
+        parsed_data = ai_gateway.parse_syllabus(raw_text, default_title=title)
         
         # Create Syllabus entity
         syllabus = Syllabus(

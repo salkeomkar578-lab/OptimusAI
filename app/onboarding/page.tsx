@@ -173,8 +173,13 @@ export default function OnboardingPage() {
       }
       const syllabusRes = await api.uploadSyllabus(syllabusFormData);
 
+      if (typeof window !== "undefined") {
+        localStorage.setItem("optimus_active_user_id", user.id);
+        localStorage.setItem("optimus_active_syllabus_id", syllabusRes.syllabus_id);
+      }
+
       // 4. Fetch the created syllabus to get subject ID
-      const tree = await api.getSyllabusTree(syllabusRes.syllabus_id);
+      const tree = syllabusRes.tree || await api.getSyllabusTree(syllabusRes.syllabus_id);
       if (tree.subjects && tree.subjects.length > 0) {
         const subjectId = tree.subjects[0].id;
         const pyqFormData = new FormData();

@@ -18,7 +18,8 @@ export default function StudyIndexPage() {
   const loadFirstTopic = async () => {
     try {
       setLoading(true);
-      const syllabi = await api.getUserSyllabi("demo-user-1");
+      const activeUid = api.getActiveUserId();
+      const syllabi = await api.getUserSyllabi(activeUid);
       if (syllabi && syllabi.length > 0 && syllabi[0].subjects.length > 0) {
         setSyllabus(syllabi[0]);
         // Auto-redirect to first high priority topic

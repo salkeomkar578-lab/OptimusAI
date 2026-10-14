@@ -91,7 +91,8 @@ function StudyWorkspaceContent() {
     });
 
     try {
-      const res = await api.submitQuiz(topicId, "demo-user-1", quizQuestions.length, correctCount);
+      const activeUid = api.getActiveUserId();
+      const res = await api.submitQuiz(topicId, activeUid, quizQuestions.length, correctCount);
       setQuizResult(res);
       setQuizSubmitted(true);
 
