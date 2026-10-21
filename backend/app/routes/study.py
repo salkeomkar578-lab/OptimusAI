@@ -3,12 +3,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.schemas import (
-    Topic, QuizAttempt, StudyNotesResponse, QuizQuestion, TutorChatRequest
+    Topic, QuizAttempt, StudyNotesResponse, QuizQuestion
 )
 from app.services.ai_gateway import ai_gateway
 from app.engines.adaptive_replan import AdaptiveReplanningEngine
 
-router = APIRouter(prefix="/study", tags=["Study Workspace & AI Tutor"])
+router = APIRouter(prefix="/study", tags=["Study Workspace"])
 
 @router.get("/topic/{topic_id}/notes", response_model=StudyNotesResponse)
 def get_topic_notes(topic_id: str, db: Session = Depends(get_db)):
@@ -62,18 +62,3 @@ def submit_topic_quiz(
     )
 
     return result
-
-@router.post("/tutor/chat")
-def tutor_chat(payload: TutorChatRequest, db: Session = Depends(get_db)):
-    topic = db.query(Topic).filter(Topic.id == payload.topic_id).first()
-    topic_name = topic.name if topic else "Exam Topic"
-
-    reply = ai_gateway.tutor_chat(
-        topic_name=topic_name,
-        user_query=payload.message,
-        history=payload.conversation_history
-    )
-    return {
-        "topic_id": payload.topic_id,
-        "reply": reply
-    }

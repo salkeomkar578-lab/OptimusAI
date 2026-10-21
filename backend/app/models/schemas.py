@@ -290,9 +290,3 @@ class StudyNotesResponse(BaseModel):
     definitions: List[dict]
     concept_diagram_mermaid: str
     recommended_reading: List[str]
-
-
-class TutorChatRequest(BaseModel):
-    topic_id: str
-    message: str
-    conversation_history: Optional[List[dict]] = []

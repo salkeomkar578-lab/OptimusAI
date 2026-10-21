@@ -19,7 +19,7 @@ class AIGatewayService:
         self.openai_key = settings.OPENAI_API_KEY or os.getenv("OPENAI_API_KEY")
         self.gemini_key = settings.GEMINI_API_KEY or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 
-    def _call_gemini(self, prompt: str, system_message: str = "You are OptimusAI, an expert study planning and tutor system.") -> Optional[str]:
+    def _call_gemini(self, prompt: str, system_message: str = "You are OptimusAI, an expert study planning and examination preparation system.") -> Optional[str]:
         self.refresh_keys()
         if not self.gemini_key:
             return None
@@ -57,7 +57,7 @@ class AIGatewayService:
                 logger.warning(f"Gemini API call failed for {model}: {e}")
         return None
 
-    def _call_groq(self, prompt: str, system_message: str = "You are OptimusAI, an expert study planning and tutor system.") -> Optional[str]:
+    def _call_groq(self, prompt: str, system_message: str = "You are OptimusAI, an expert study planning and examination preparation system.") -> Optional[str]:
         self.refresh_keys()
         if not self.groq_key:
             return None
@@ -565,30 +565,5 @@ class AIGatewayService:
         ]
         return questions[:count]
 
-    def tutor_chat(self, topic_name: str, user_query: str, history: List[Dict[str, str]] = None) -> str:
-        """
-        Socratic pedagogical AI Tutor response with context on the specific topic.
-        """
-        prompt = (
-            f"You are the OptimusAI Academic Tutor specializing in '{topic_name}'. "
-            "Help the student master this concept for their upcoming exam. "
-            "Be encouraging, highly structured, give intuitive analogies, and ask a follow-up test question to verify mastery.\n\n"
-            f"Student Question: {user_query}"
-        )
-        res = self.call_llm(prompt, system_message=f"You are a distinguished university professor and tutor for {topic_name}.")
-        if res:
-            return res.strip()
-
-        # Intelligent adaptive tutor response
-        clean_topic = re.sub(r'["\\]', '', topic_name)
-        return (
-            f"### 🎯 Master Concept: {clean_topic}\n\n"
-            f"Great inquiry regarding **{user_query}**! Here is how to conceptualize and master this for your upcoming exam:\n\n"
-            f"1. **Core Intuition:** At its heart, `{clean_topic}` establishes a structured framework so that complex interactions operate predictably under strict constraints.\n\n"
-            f"2. **Exam High-Yield Takeaway:** Past examiners evaluate whether you can clearly contrast **theoretical assumptions** with **practical bottlenecks**. Always state the key invariants, governing formulas, and edge cases.\n\n"
-            f"3. **Quick Self-Check Question:**\n"
-            f"> *If the scale of the system or workload doubles while resources remain fixed, what is the primary bottleneck you would expect in `{clean_topic}`?*\n\n"
-            f"Take a moment to reflect on your answer, and reply back when ready or let me know if you would like a step-by-step example!"
-        )
 
 ai_gateway = AIGatewayService()

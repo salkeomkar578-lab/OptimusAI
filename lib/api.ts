@@ -913,24 +913,6 @@ export const api = {
     };
   },
 
-  async chatWithTutor(topicId: string, message: string, history: any[] = []): Promise<{ reply: string }> {
-    try {
-      const res = await fetch(`${API_BASE}/study/tutor/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic_id: topicId,
-          message,
-          conversation_history: history,
-        }),
-      });
-      if (res.ok) return await res.json();
-    } catch (e) {}
-    return {
-      reply: `### 🎯 Concept Mastery: ${message}\n\nGreat question! In distributed systems exams, remember the golden rule: **Quorums guarantee safety, while terms resolve conflicts**.\n\nThink of Raft election timeouts like bidders in an auction: the randomized interval ensures one node speaks first and secures the majority vote before others split the ballot.\n\n*Self-check question: If 2 nodes in a 5-node cluster partition away, can the remaining 3 nodes still commit new log entries? (Answer: Yes, because 3 > 5/2!)*`
-    };
-  },
-
   async getUserAnalytics(userId: string): Promise<AnalyticsData> {
     try {
       const res = await fetch(`${API_BASE}/analytics/${userId}`);

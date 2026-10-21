@@ -25,7 +25,7 @@ OptimusAI is an end-to-end, full-stack, production-grade adaptive study planner 
 |        Semantic AI Layer        |  |    Topic Priority Engine      |   |     Deterministic Scheduler     |
 | - PyMuPDF & OCR Parsing         |  | - Priority Ranking Formula    |   | - Hard Availability Slots       |
 | - Past Year Question Vector Map |  | - Urgency & Mastery Weakness  |   | - Spaced Repetition (1/3/7/14d) |
-| - Socratic AI Tutor & Quizzes   |  | - Overdue Penalties           |   | - Zero LLM Slot Hallucination   |
+| - High-Yield Quizzes & Mastery  |  | - Overdue Penalties           |   | - Zero LLM Slot Hallucination   |
 +---------------------------------+  +-------------------------------+   +---------------------------------+
                  |                                     |                                   |
                  +-------------------------------------+-----------------------------------+
@@ -136,5 +136,5 @@ Because this is a full-stack monorepo with both a Python backend and a Next.js f
 2. **Onboarding Wizard (`/onboarding`):** 4-step wizard to upload syllabi, past exam papers, define weekly study availability hours, and set exam dates.
 3. **Interactive Syllabus Tree (`/syllabus`):** `Subject -> Unit -> Topic` hierarchy with PYQ weight badges (High/Med/Low), mastery gauges, and past question inspection modal.
 4. **Adaptive Timeline (`/planner`):** Calendar view with hard time-slot constraints and real-time "Complete", "Skip & Replan", and "Reschedule" actions.
-5. **Study & Examination Room (`/study/[topicId]`):** High-yield exam notes, mathematical invariants, live Mermaid.js concept diagrams, interactive practice quiz component, and Socratic RAG AI Tutor drawer.
+5. **Study & Examination Room (`/study/[topicId]`):** High-yield exam notes, mathematical invariants, live Mermaid.js concept diagrams, and interactive practice quiz component.
 6. **Analytics & Vulnerability Radar (`/analytics`):** Real-time coverage gauge, average mastery, weak area focus leaderboard, and 7-day spaced repetition heatmap.

@@ -7,7 +7,6 @@ import {
   BookOpen, 
   HelpCircle, 
   FileText, 
-  MessageSquare, 
   Sparkles, 
   ArrowLeft, 
   CheckCircle2, 
@@ -16,7 +15,6 @@ import {
   RotateCcw, 
   Flame, 
   Award,
-  Send,
   Zap,
   ChevronRight,
   ExternalLink
@@ -31,7 +29,7 @@ function StudyWorkspaceContent() {
   const router = useRouter();
   const topicId = params?.topicId as string;
 
-  const [activeTab, setActiveTab] = useState<"notes" | "diagram" | "quiz" | "tutor">("notes");
+  const [activeTab, setActiveTab] = useState<"notes" | "diagram" | "quiz">("notes");
   const [notes, setNotes] = useState<StudyNotes | null>(null);
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -41,16 +39,6 @@ function StudyWorkspaceContent() {
   const [quizSubmitted, setQuizSubmitted] = useState<boolean>(false);
   const [quizResult, setQuizResult] = useState<any>(null);
   const [isSubmittingQuiz, setIsSubmittingQuiz] = useState<boolean>(false);
-
-  // Tutor Chat state
-  const [messages, setMessages] = useState<{ sender: "user" | "tutor"; text: string }[]>([
-    {
-      sender: "tutor",
-      text: "Hello! I am your OptimusAI Socratic Tutor for this topic. What specific derivation, formula, or exam concept would you like to master today?",
-    },
-  ]);
-  const [chatInput, setChatInput] = useState<string>("");
-  const [isSendingMsg, setIsSendingMsg] = useState<boolean>(false);
 
   useEffect(() => {
     if (topicId) {
@@ -116,27 +104,6 @@ function StudyWorkspaceContent() {
     setQuizResult(null);
   };
 
-  const handleSendMessage = async (textToSend?: string) => {
-    const text = textToSend || chatInput;
-    if (!text.trim() || isSendingMsg) return;
-
-    setMessages((prev) => [...prev, { sender: "user", text }]);
-    if (!textToSend) setChatInput("");
-    setIsSendingMsg(true);
-
-    try {
-      const res = await api.chatWithTutor(topicId, text, []);
-      setMessages((prev) => [...prev, { sender: "tutor", text: res.reply }]);
-    } catch (err: any) {
-      setMessages((prev) => [
-        ...prev,
-        { sender: "tutor", text: "Sorry, I encountered an issue generating a response. Please try again." },
-      ]);
-    } finally {
-      setIsSendingMsg(false);
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb Header */}
@@ -165,7 +132,6 @@ function StudyWorkspaceContent() {
             { id: "notes", label: "Study Notes", icon: BookOpen },
             { id: "diagram", label: "Concept Diagram", icon: FileText },
             { id: "quiz", label: `Quiz (${quizQuestions.length})`, icon: HelpCircle },
-            { id: "tutor", label: "AI Tutor", icon: MessageSquare },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -411,93 +377,6 @@ function StudyWorkspaceContent() {
                   </button>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* TAB 4: RAG AI TUTOR DRAWER */}
-          {activeTab === "tutor" && (
-            <div className="max-w-4xl mx-auto glass-panel rounded-3xl border border-slate-800 overflow-hidden flex flex-col h-[650px]">
-              {/* Chat Header */}
-              <div className="px-6 py-4 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-                    <Sparkles className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-white">OptimusAI Socratic Tutor</h3>
-                    <p className="text-[11px] text-slate-400">Grounding on {notes?.topic_name}</p>
-                  </div>
-                </div>
-                <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  RAG Online
-                </span>
-              </div>
-
-              {/* Chat Messages */}
-              <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-950/40">
-                {messages.map((m, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex ${m.sender === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`max-w-[80%] p-4 rounded-2xl text-xs leading-relaxed ${
-                        m.sender === "user"
-                          ? "bg-indigo-600 text-white rounded-br-none"
-                          : "bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none font-sans"
-                      }`}
-                    >
-                      {m.text}
-                    </div>
-                  </div>
-                ))}
-                {isSendingMsg && (
-                  <div className="flex justify-start">
-                    <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-slate-400 animate-pulse flex items-center gap-2">
-                      <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>Formulating Socratic response...</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Suggested Questions */}
-              <div className="px-6 py-2.5 bg-slate-900/60 border-t border-slate-800/60 flex items-center gap-2 overflow-x-auto text-[11px]">
-                <span className="text-slate-500 shrink-0">Quick prompts:</span>
-                {[
-                  "Explain intuitively with real-world analogy",
-                  "Show past exam derivation step-by-step",
-                  "Test me on tricky edge cases",
-                ].map((prompt, pIdx) => (
-                  <button
-                    key={pIdx}
-                    onClick={() => handleSendMessage(prompt)}
-                    className="px-3 py-1 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 shrink-0 transition-colors"
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-
-              {/* Chat Input */}
-              <div className="p-4 bg-slate-900/90 border-t border-slate-800 flex items-center gap-3">
-                <input
-                  type="text"
-                  placeholder="Ask a question about this topic..."
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                />
-                <button
-                  onClick={() => handleSendMessage()}
-                  disabled={!chatInput.trim() || isSendingMsg}
-                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Ask</span>
-                </button>
-              </div>
             </div>
           )}
         </div>
